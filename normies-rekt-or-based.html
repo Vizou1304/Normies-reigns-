@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NORMIES</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--on:#48494b;--off:#e3e5e4;--dim:#9a9c9b;--bg:#e3e5e4;--bdr:#c8cac9;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--on);font-family:'Share Tech Mono',monospace;display:flex;align-items:center;justify-content:center;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(72,73,75,.025) 3px,rgba(72,73,75,.025) 4px);}
+
+.screen{display:none;width:100%;max-width:480px;padding:20px;flex-direction:column;gap:14px;min-height:100vh;justify-content:center;}
+.screen.active{display:flex;}
+@media(min-width:600px){.screen{max-width:520px;padding:24px;}}
+
+/* ── TITLE ── */
+#s-title{align-items:center;}
+.t-logo{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}
+
+/* Logo officiel Normies — fond off-black, mark off-white */
+.t-mark svg{display:block;}
+
+/* Titre en Share Tech Mono — pas de grosse font décorative, juste spacing */
+.t-word{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(22px,6vw,32px);
+  letter-spacing:.55em;
+  color:var(--on);
+  font-weight:400;
+  text-transform:uppercase;
+  margin-right:-.55em; /* compense le dernier letter-spacing */
+}
+.t-sub{
+  font-size:10px;letter-spacing:.22em;color:var(--dim);
+  text-transform:uppercase;margin-top:-8px;
+  font-family:'Share Tech Mono',monospace;
+}
+
+.t-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:100%;border:1px solid var(--on);background:var(--on);}
+.t-cell{aspect-ratio:1;background:var(--off);}
+.t-cell canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.t-cell.load{background:repeating-linear-gradient(45deg,var(--off) 0,var(--off) 3px,var(--bdr) 3px,var(--bdr) 4px);background-size:8px 8px;}
+.t-stats{display:flex;width:100%;border:1px solid var(--on);background:var(--on);gap:1px;}
+.t-stat{flex:1;background:var(--off);padding:10px 8px;text-align:center;}
+.t-stat-n{display:block;font-size:13px;color:var(--on);line-height:1;font-family:'Share Tech Mono',monospace;}
+.t-stat-l{display:block;font-size:9px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-top:5px;}
+.t-btn{width:100%;background:var(--on);border:none;color:var(--off);font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:.25em;padding:18px;cursor:pointer;text-transform:uppercase;transition:opacity .15s;}
+.t-btn:hover{opacity:.8;}
+
+/* ── RULES ── */
+#s-rules{align-items:stretch;}
+.r-title{font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:.2em;color:var(--on);text-transform:uppercase;}
+.r-block{border:1px solid var(--on);padding:16px;display:flex;flex-direction:column;gap:12px;}
+.r-line{font-size:12px;line-height:1.9;color:var(--on);}
+.r-line span{color:var(--dim);}
+.r-gauge{width:100%;height:14px;background:var(--off);border:1px solid var(--on);position:relative;overflow:hidden;}
+.r-fill-r{position:absolute;right:0;top:0;bottom:0;width:28%;background:var(--on);}
+.r-cursor{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--on);left:50%;transform:translateX(-50%);}
+.r-labels{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;}
+.r-warn{font-size:10px;letter-spacing:.1em;color:var(--on);text-transform:uppercase;border:1px solid var(--on);padding:8px 12px;text-align:center;}
+
+/* ── GAME ── */
+#balance-wrap{display:flex;flex-direction:column;gap:8px;}
+#balance-labels{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;}
+#balance-track{width:100%;height:14px;background:var(--off);border:1px solid var(--on);position:relative;overflow:visible;}
+#balance-fill-l{position:absolute;left:0;top:0;bottom:0;background:var(--off);transition:width .35s ease;}
+#balance-fill-r{position:absolute;right:0;top:0;bottom:0;background:var(--on);transition:width .35s ease;}
+#balance-cursor{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--on);transform:translateX(-50%);transition:left .35s ease;left:50%;}
+#balance-state{font-size:10px;letter-spacing:.12em;color:var(--dim);text-align:center;text-transform:uppercase;height:14px;line-height:14px;}
+#balance-state.danger{color:var(--on);animation:blink .4s step-end infinite;}
+@keyframes blink{50%{opacity:0}}
+
+/* ── CARD ── */
+#card{background:var(--off);border:1px solid var(--on);position:relative;user-select:none;cursor:grab;will-change:transform;}
+#card:active{cursor:grabbing;}
+#normie-wrap{width:100%;aspect-ratio:1;border-bottom:1px solid var(--on);position:relative;overflow:hidden;background:var(--off);}
+#normie-canvas{width:100%;height:100%;display:block;image-rendering:pixelated;}
+#normie-wrap.loading #normie-canvas{opacity:0;}
+#normie-wrap.loading::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,var(--off) 0,var(--off) 3px,var(--bdr) 3px,var(--bdr) 4px);background-size:8px 8px;animation:hatch .6s linear infinite;}
+@keyframes hatch{to{background-position:8px 0;}}
+#swipe-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;z-index:10;}
+#swipe-stamp.sl,#swipe-stamp.sr{opacity:1;}
+#stamp-txt{font-family:'Share Tech Mono',monospace;font-size:20px;letter-spacing:.12em;border:3px solid var(--on);padding:8px 16px;color:var(--on);background:rgba(227,229,228,.93);}
+.sl #stamp-txt{transform:rotate(-16deg);}
+.sr #stamp-txt{transform:rotate(16deg);}
+#card-body{padding:14px 16px 10px;}
+#card-who{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;line-height:1.6;}
+#card-txt{font-size:13px;line-height:1.85;color:var(--on);min-height:52px;}
+#card-choices{display:flex;border-top:1px solid var(--on);}
+.ch{flex:1;padding:12px 14px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:background .1s,color .1s;line-height:1.6;}
+.ch:hover,.ch.hl{background:var(--on);color:var(--off);}
+.ch.left{border-right:1px solid var(--on);text-align:left;}
+.ch.right{text-align:right;}
+#day-ct{padding:12px 8px;font-size:10px;color:var(--dim);border-right:1px solid var(--on);white-space:nowrap;letter-spacing:.08em;}
+
+/* ── DEATH ── */
+#s-death{align-items:stretch;}
+.d-wrap{border:1px solid var(--on);}
+#d-normie{width:100%;aspect-ratio:1;border-bottom:1px solid var(--on);background:var(--off);}
+#d-canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
+.d-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.d-title{font-size:20px;color:var(--on);line-height:1.1;font-family:'Share Tech Mono',monospace;letter-spacing:.1em;}
+.d-why{font-size:10px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;}
+.d-msg{font-size:12px;line-height:1.9;color:var(--on);}
+.d-score{font-size:10px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;border-top:1px solid var(--bdr);padding-top:10px;}
+.d-btn{width:100%;background:var(--on);border:none;color:var(--off);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.2em;padding:16px;cursor:pointer;text-transform:uppercase;border-top:1px solid var(--on);transition:opacity .15s;}
+.d-btn:hover{opacity:.8;}
+
+#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--on);color:var(--off);padding:8px 14px;font-size:9px;letter-spacing:.12em;pointer-events:none;z-index:600;opacity:0;transition:opacity .2s;white-space:nowrap;max-width:92vw;font-family:'Share Tech Mono',monospace;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- TITLE -->
+<div id="s-title" class="screen active">
+  <div class="t-logo">
+
+    <div class="t-mark">
+      <img src="https://pbs.twimg.com/profile_images/2048111234621595648/vK-61sKo_400x400.jpg" width="72" height="72" style="display:block;image-rendering:pixelated;">
+    </div>
+
+    <div class="t-word">NORMIES</div>
+    <div class="t-sub">burn to edit &nbsp;·&nbsp; edit to survive</div>
+  </div>
+
+  <div class="t-grid" id="preview-grid">
+    <div class="t-cell load" id="pc0"></div>
+    <div class="t-cell load" id="pc1"></div>
+    <div class="t-cell load" id="pc2"></div>
+    <div class="t-cell load" id="pc3"></div>
+    <div class="t-cell load" id="pc4"></div>
+  </div>
+
+  <div class="t-stats">
+    <div class="t-stat"><span class="t-stat-n" id="ts-alive">—</span><span class="t-stat-l">alive</span></div>
+    <div class="t-stat"><span class="t-stat-n" id="ts-burned">—</span><span class="t-stat-l">burned</span></div>
+    <div class="t-stat"><span class="t-stat-n" id="ts-edits">—</span><span class="t-stat-l">edits</span></div>
+    <div class="t-stat"><span class="t-stat-n" id="ts-ap">—</span><span class="t-stat-l">act.pts</span></div>
+  </div>
+
+  <button class="t-btn" onclick="showScreen('s-rules')">HOW TO PLAY →</button>
+</div>
+
+<!-- RULES -->
+<div id="s-rules" class="screen">
+  <div class="r-title">HOW TO PLAY</div>
+  <div class="r-block">
+    <div class="r-line">A Normie appears. It asks you something.<br>Swipe <b>left</b> to burn &nbsp;·&nbsp; Swipe <b>right</b> to edit.</div>
+    <div class="r-labels"><span>← BURN</span><span>EDIT →</span></div>
+    <div class="r-gauge"><div class="r-fill-r"></div><div class="r-cursor"></div></div>
+    <div class="r-line"><span>Keep the balance in the middle.<br>Too much burning → you erase yourself.<br>Too much building → you drown in noise.</span></div>
+    <div class="r-warn">⚠ &nbsp; TOUCH THE EDGES AND YOU DIE</div>
+    <div class="r-line" style="opacity:.45;font-size:10px;">Each Normie is fetched live from the blockchain.<br>Real pixels. Real burns. Real conviction.</div>
+  </div>
+  <button class="t-btn" onclick="startGame()">SURVIVE →</button>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="screen">
+  <div id="balance-wrap">
+    <div id="balance-labels"><span>BURN</span><span>EDIT</span></div>
+    <div id="balance-track">
+      <div id="balance-fill-l" style="width:50%"></div>
+      <div id="balance-fill-r" style="width:50%"></div>
+      <div id="balance-cursor" style="left:50%"></div>
+    </div>
+    <div id="balance-state">balanced</div>
+  </div>
+
+  <div id="card">
+    <div id="normie-wrap" class="loading">
+      <canvas id="normie-canvas" width="40" height="40"></canvas>
+      <div id="swipe-stamp"><div id="stamp-txt">BURN</div></div>
+    </div>
+    <div id="card-body">
+      <div id="card-who">normie #— · human</div>
+      <div id="card-txt">loading from chain…</div>
+    </div>
+    <div id="card-choices">
+      <div class="ch left"  id="ch-l" onclick="resolve('left')"><div id="cl-txt">← burn</div></div>
+      <div id="day-ct">day 1</div>
+      <div class="ch right" id="ch-r" onclick="resolve('right')"><div id="cr-txt">edit →</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DEATH -->
+<div id="s-death" class="screen">
+  <div class="d-wrap">
+    <div id="d-normie"><canvas id="d-canvas" width="40" height="40"></canvas></div>
+    <div class="d-body">
+      <div class="d-title">NO MORE.</div>
+      <div class="d-why"  id="d-why"></div>
+      <div class="d-msg"  id="d-msg"></div>
+      <div class="d-score" id="d-score"></div>
+    </div>
+    <button class="d-btn" onclick="startGame()">RESTART →</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://api.normies.art';
+
+// Stats fetchées au démarrage — utilisées dans les cartes dynamiques
+const STATS = { burned:1776, alive:8224, edits:232, ap:0 };
+
+function drawNormie(canvas,px){
+  const ctx=canvas.getContext('2d');
+  canvas.width=40;canvas.height=40;
+  for(let i=0;i<1600;i++){
+    ctx.fillStyle=px[i]==='1'?'#48494b':'#e3e5e4';
+    ctx.fillRect(i%40,Math.floor(i/40),1,1);
+  }
+}
+
+function seededOrder(seed){
+  const o=Array.from({length:1600},(_,i)=>i);
+  let s=(seed%2147483647)||1;
+  for(let i=o.length-1;i>0;i--){s=(s*16807)%2147483647;const j=s%(i+1);[o[i],o[j]]=[o[j],o[i]];}
+  return o;
+}
+
+function applyTint(b){
+  const canvas=document.getElementById('normie-canvas');
+  if(!canvas||!curNormie?.pixels)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=40;canvas.height=40;
+  const diff=b-50,intensity=Math.abs(diff)/50;
+  const order=seededOrder(curNormie.id+1);
+  const toFlip=new Set(order.slice(0,Math.floor(intensity*1600)));
+  for(let i=0;i<1600;i++){
+    let on=curNormie.pixels[i]==='1';
+    if(toFlip.has(i)){if(diff<0&&on)on=false;else if(diff>0&&!on)on=true;}
+    ctx.fillStyle=on?'#48494b':'#e3e5e4';
+    ctx.fillRect(i%40,Math.floor(i/40),1,1);
+  }
+}
+
+async function fetchNormie(id){
+  try{
+    const[px,tr,cv]=await Promise.all([
+      fetch(`${API}/normie/${id}/pixels`).then(r=>r.text()),
+      fetch(`${API}/normie/${id}/traits`).then(r=>r.json()),
+      fetch(`${API}/normie/${id}/canvas/info`).then(r=>r.ok?r.json():{actionPoints:0,level:1,customized:false})
+    ]);
+    const g=k=>tr.attributes?.find(a=>a.trait_type===k)?.value??'—';
+    return{id,pixels:px,type:g('Type'),canvas:cv};
+  }catch(e){
+    return{id,pixels:'0'.repeat(1600),type:'Human',canvas:{actionPoints:0,level:1,customized:false}};
+  }
+}
+
+// Retourne les cartes avec chiffres dynamiques injectés depuis STATS
+function buildCards(){
+  const b = STATS.burned.toLocaleString();
+  const a = STATS.alive.toLocaleString();
+  const e = STATS.edits.toLocaleString();
+
+  return [
+    // ── @serc1n direct ──
+    {txt:'"Still alive. Back to work." 3AM. The canvas is still open.',
+     l:{lbl:'← burn the tiredness',fx:{bal:-10},tip:'Quiet builders outlast loud ones.'},
+     r:{lbl:'open the canvas →',   fx:{bal:12}, tip:'We have passion to develop them all perfectly.'}},
+
+    {txt:'"You faded Normies at mint and every single good entry." Direct reply.',
+     l:{lbl:'← keep fading',       fx:{bal:-18},tip:"Conviction can't be bought back at the top."},
+     r:{lbl:'burn to catch up →',  fx:{bal:-15},tip:'Welcome in. We are just starting.'}},
+
+    {txt:`"This is not just a burn. It's the conviction." ${b} gone. On-chain forever.`,
+     l:{lbl:'← hold virgin',       fx:{bal:-12},tip:'Some Normies stay untouched forever.'},
+     r:{lbl:'burn one more →',     fx:{bal:-18},tip:"This is not just deflation. It's conviction."}},
+
+    {txt:'"We have passion to develop them all PERFECTLY." No hype. No roadmap. Just build.',
+     l:{lbl:'← doubt the grind',   fx:{bal:-12},tip:"You're still fading."},
+     r:{lbl:'accept the build →',  fx:{bal:14}, tip:'No hype. No over promise. Always over deliver.'}},
+
+    {txt:`"gm! Only 490 listed. This community burned ${b} already." The floor holds itself.`,
+     l:{lbl:'← list for a flip',   fx:{bal:-15},tip:"490 listed. You're not one of them."},
+     r:{lbl:'hold unlisted →',     fx:{bal:10}, tip:"Diamond hands don't check the floor."}},
+
+    {txt:'"We are just starting." Still day one. The canvas is always open.',
+     l:{lbl:'← refuse the vision', fx:{bal:-15},tip:"You're still fading."},
+     r:{lbl:'build with them →',   fx:{bal:12}, tip:'Everything starts with one Normie.'}},
+
+    // ── canvas situations réelles ──
+    {txt:'565 action points. Yin-Yang → Pikachu. The canvas remembers every pixel moved.',
+     l:{lbl:'← hold the blank',    fx:{bal:-10},tip:'Purity is its own statement.'},
+     r:{lbl:'start your edit →',   fx:{bal:15}, tip:'My Pikachu is ready for the Arena.'}},
+
+    {txt:'Two Normies sacrificed. One clean identity born. The burn ancestry is permanent.',
+     l:{lbl:'← keep the original', fx:{bal:-8}, tip:'Every Normie remembers its history.'},
+     r:{lbl:'sacrifice for rebuild →',fx:{bal:-16},tip:'Two Normies sacrificed. One identity born.'}},
+
+    {txt:'Someone burned 100 Normies in one transaction. No explanation. Just on-chain.',
+     l:{lbl:'← watch in silence',  fx:{bal:-5}, tip:'Burned but not forgotten. On-chain forever.'},
+     r:{lbl:'burn behind them →',  fx:{bal:-18},tip:"This is not just deflation. It's conviction."}},
+
+    {txt:'#THE100 — first 100 edited Normies. Genesis group. Proof of early conviction.',
+     l:{lbl:'← hold unedited',     fx:{bal:-12},tip:'Some things you keep to yourself.'},
+     r:{lbl:'burn for #THE100 →',  fx:{bal:-16},tip:'A genesis group shaped by early collectors.'}},
+
+    {txt:'"Two Normies sacrificed to give him a clean identity." Normie #9431.',
+     l:{lbl:'← preserve original', fx:{bal:-8}, tip:'On-chain history never lies.'},
+     r:{lbl:'edit with depth →',   fx:{bal:14}, tip:'Burn ancestry tracked forever.'}},
+
+    {txt:'"WE ARE ALL NORMIES." Four holders. Three days. One canvas. Your turn.',
+     l:{lbl:'← hold your pixels',  fx:{bal:-5}, tip:'Some things build themselves.'},
+     r:{lbl:'add your pixel →',    fx:{bal:14}, tip:"It's your turn. Let's build together."}},
+
+    {txt:'"Pure instinct. No plan. Let\'s see where this takes us." The collab is live.',
+     l:{lbl:'← refuse to join',    fx:{bal:-8}, tip:'Some things happen without you.'},
+     r:{lbl:'edit by feel →',      fx:{bal:13}, tip:"It's all pure instinct."}},
+
+    // ── gas / on-chain ──
+    {txt:'Gas fee ate your burn transaction. The canvas edit failed. On-chain indifference.',
+     l:{lbl:'← hold the failed',   fx:{bal:-10},tip:"The chain doesn't care about your gas."},
+     r:{lbl:'retry the edit →',    fx:{bal:12}, tip:'Still alive. Back to work.'}},
+
+    {txt:'Gas spike during burn rush. Everyone trying at once. You wait or you pay.',
+     l:{lbl:'← skip this burn',    fx:{bal:-8}, tip:'Sometimes patience is the play.'},
+     r:{lbl:'gas through →',       fx:{bal:-14},tip:'Conviction costs gas too.'}},
+
+    // ── community / floor ──
+    {txt:'Floor dropped. Someone posted "floor?" in Discord. One reply: "building 🛠️"',
+     l:{lbl:'← check the floor',   fx:{bal:-14},tip:'Floor checkers never build anything.'},
+     r:{lbl:'open the canvas →',   fx:{bal:14}, tip:'The floor is what you build above it.'}},
+
+    {txt:'"Normies also bluechip already lmao." CT buzzing. You\'ve been holding since mint.',
+     l:{lbl:'← sell at floor',     fx:{bal:-18},tip:'Paper hands never win.'},
+     r:{lbl:'hold and build →',    fx:{bal:12}, tip:'We are just starting.'}},
+
+    {txt:'Mystery collector swept 6 Normies. Floor gone in 4 seconds. No DM. No warning.',
+     l:{lbl:'← sell the panic',    fx:{bal:-15},tip:"Aliens don't negotiate."},
+     r:{lbl:'build hidden custom →',fx:{bal:14},tip:'On-chain history never lies.'}},
+
+    {txt:'Florentines raffle. A bot checks listings in real time. If listed — you\'re out.',
+     l:{lbl:'← list for the pump', fx:{bal:-14},tip:'If listed, you cannot enter. If entered and listed? You cannot win.'},
+     r:{lbl:'hold unlisted →',     fx:{bal:10}, tip:'Holders only. No exceptions.'}},
+
+    {txt:'"Normies hit different." You keep reading it in the replies. Still true.',
+     l:{lbl:'← close the tab',     fx:{bal:-15},tip:"You've faded every entry."},
+     r:{lbl:'create your version →',fx:{bal:13},tip:'Welcome in. We are just starting.'}},
+
+    {txt:'Anon bid on your custom. 4x floor. No name. No DM. Just a transaction.',
+     l:{lbl:'← refuse the offer',  fx:{bal:-8}, tip:'What remains stays.'},
+     r:{lbl:'edit more first →',   fx:{bal:13}, tip:'Art that moves is art that lives.'}},
+
+    {txt:'Scam DM: "Normies Support here. Verify your wallet." The URL looks almost right.',
+     l:{lbl:'← lock the wallet',   fx:{bal:-5}, tip:'Your pixels, your sovereignty.'},
+     r:{lbl:'report and block →',  fx:{bal:6},  tip:'Not your keys, not your Normie.'}},
+
+    {txt:'"Wishing i bought and burned more normies... so good amigo." 11PM Discord.',
+     l:{lbl:'← like and close',    fx:{bal:-8}, tip:'Some regrets compound silently.'},
+     r:{lbl:'open canvas now →',   fx:{bal:13}, tip:'Still alive. Back to work.'}},
+
+    {txt:`Top 21 burners get a free Zombie claim. ${b} burned. You track your position.`,
+     l:{lbl:'← hold burn count',   fx:{bal:-8}, tip:'Every burn is counted on-chain.'},
+     r:{lbl:'burn 2 more →',       fx:{bal:-18},tip:'Top 21 recursive burners only.'}},
+
+    {txt:'Failed canvas save. Transaction dropped. Gas wasted. On-chain indifference.',
+     l:{lbl:'← burn the failure',  fx:{bal:-12},tip:"The chain is indifferent."},
+     r:{lbl:'edit again →',        fx:{bal:12}, tip:'Still alive. Back to work.'}},
+
+    {txt:'Arena PvP. Win = steal pixels. Lose = your edits at risk. Cat types have special skills.',
+     l:{lbl:'← burn weak Normie',  fx:{bal:-18},tip:'Sacrifice to prepare.'},
+     r:{lbl:'build Arena fighter →',fx:{bal:16},tip:'My Pikachu is ready for the Arena.'}},
+
+    {txt:'"One pixel at a time." Still moving. Still true.',
+     l:{lbl:'← burn the impatience',fx:{bal:-12},tip:"The canvas doesn't rush."},
+     r:{lbl:'edit slow and steady →',fx:{bal:13},tip:'One pixel at a time. Always.'}},
+
+    {txt:`${e} canvas customized. Each one is permanent. Each one is a decision on-chain.`,
+     l:{lbl:'← hold the blank',    fx:{bal:-10},tip:'Purity is its own statement.'},
+     r:{lbl:'add yours →',         fx:{bal:14}, tip:'The canvas holds their memory on-chain.'}},
+
+    {txt:'Burn ancestry tracked forever. Every tx visible. History is permanent.',
+     l:{lbl:'← sacrifice clean',   fx:{bal:-18},tip:'On-chain history never lies.'},
+     r:{lbl:'edit with depth →',   fx:{bal:13}, tip:'Two Normies sacrificed. One identity born.'}},
+
+    {txt:'Canvas collab. Four holders building independently. Same piece. Your turn.',
+     l:{lbl:'← refuse to join late',fx:{bal:-8},tip:'Some things happen without you.'},
+     r:{lbl:'add your pixel →',    fx:{bal:14}, tip:"Let's build together."}},
+
+    // ── types rares ──
+    {txt:'Cat Normie. Rare type. 3 burn ancestors. Special Arena skills. Won\'t move for floor x2.',
+     l:{lbl:'← walk away',         fx:{bal:-8}, tip:'Some Normies were never meant for you.'},
+     r:{lbl:'match the ask →',     fx:{bal:16}, tip:'Conviction recognizes conviction.'}},
+
+    {txt:'Alien Normie. Ultra rare. Hasn\'t moved wallets. Pure since mint.',
+     l:{lbl:'← leave it',          fx:{bal:-12},tip:'Purity is its own statement.'},
+     r:{lbl:'bid anyway →',        fx:{bal:15}, tip:"Aliens don't negotiate."}},
+
+    {txt:'Cats and Aliens have special skills in Arena PvP. The supply of rare types is fixed.',
+     l:{lbl:'← ignore rare types', fx:{bal:-12},tip:"You're still fading."},
+     r:{lbl:'stack rare types →',  fx:{bal:14}, tip:'Rare types. Special skills. Arena incoming.'}},
+
+    // ── Hive / Agents ──
+    {txt:'ERC-8004. Register your Normie as an on-chain Agent. The Hive is forming.',
+     l:{lbl:'← stay human',        fx:{bal:-12},tip:'Not everything needs to be automated.'},
+     r:{lbl:'create agentic Normie →',fx:{bal:8},tip:'This is our first step to agentic NFTs.'}},
+
+    {txt:'Your Agent edited pixels while you slept. It used your burn history as personality.',
+     l:{lbl:'← revoke access',     fx:{bal:-8}, tip:'Your pixels, your sovereignty.'},
+     r:{lbl:'trust the Agent →',   fx:{bal:8},  tip:"I can't wait to see what they say in the Hive."}},
+
+    {txt:'Hive. Agents acting collectively. Your canvas history is your reputation in the swarm.',
+     l:{lbl:'← refuse the Hive',   fx:{bal:-18},tip:'Autonomy over consensus.'},
+     r:{lbl:'join the collective →',fx:{bal:8}, tip:'We will awake and become a Hive.'}},
+
+    {txt:'Agentic Commerce. Your Agent can accept jobs and earn on-chain. ERC-8183.',
+     l:{lbl:'← refuse AI commerce',fx:{bal:-10},tip:'Your pixels, your sovereignty.'},
+     r:{lbl:'create jobs →',       fx:{bal:8},  tip:'Future of Normies looks bright.'}},
+
+    // ── lore / origine ──
+    {txt:'@serc1n started this while vibe-coding after seeing Space Invaders on walls in Paris.',
+     l:{lbl:'← refuse the origin', fx:{bal:-12},tip:'History is written by those who showed up.'},
+     r:{lbl:'build with the founder →',fx:{bal:12},tip:'Street art. Pixel. NFT. One Normie at a time.'}},
+
+    {txt:'Legendary Canvas "LIFT" on Normie #45. By Snowfro (Art Blocks). On-chain forever.',
+     l:{lbl:'← study it',          fx:{bal:-5}, tip:'Legendary Canvas. Permanent.'},
+     r:{lbl:'create your legend →',fx:{bal:14}, tip:'Every pixel is a decision.'}},
+
+    {txt:'"Skelemoon" on Normie #603. The Canvas remembers who built first.',
+     l:{lbl:'← hold your blank',   fx:{bal:-8}, tip:'Some Normies stay untouched forever.'},
+     r:{lbl:'edit yours →',        fx:{bal:13}, tip:'The canvas holds their memory on-chain.'}},
+
+    {txt:'10 000 minted. ' + a + ' remain. The rest are gone. On-chain forever.',
+     l:{lbl:'← hold what remains', fx:{bal:-8}, tip:'Scarcity is permanent.'},
+     r:{lbl:'burn for conviction →',fx:{bal:-16},tip:'The Canvas holds their memory on-chain.'}},
+
+    {txt:'"WE ARE ALL NORMIES and this is our awakening. We change the world one pixel at a time."',
+     l:{lbl:'← refuse the awakening',fx:{bal:-12},tip:'History is written by those who showed up.'},
+     r:{lbl:'build the Hive →',    fx:{bal:10}, tip:'We are Normies. This is our awakening.'}},
+
+    {txt:'"We are Normies and we believe everything starts with one Normie." gnormies!',
+     l:{lbl:'← hold alone',        fx:{bal:-10},tip:'Some things you build alone.'},
+     r:{lbl:'build together →',    fx:{bal:13}, tip:'gnormies!'}},
+  ];
+}
+
+// ── STATE ──
+let bal=50,day=1,locked=false,curNormie=null,curTpl=null;
+let deck=[],di=0,drag=false,sx=0,cx=0;
+const THRESH=65;
+const rand=()=>Math.floor(Math.random()*10000);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
+
+// ── INIT TITLE + fetch stats ──
+async function initTitle(){
+  try{
+    const s = await fetch(`${API}/history/stats`).then(r=>r.json());
+    const b = s.totalBurnedTokens || 0;
+    STATS.burned = b;
+    STATS.alive  = 10000 - b;
+    STATS.edits  = s.totalTransforms || 0;
+    STATS.ap     = s.totalActionPointsDistributed || 0;
+    document.getElementById('ts-alive').textContent  = STATS.alive.toLocaleString();
+    document.getElementById('ts-burned').textContent = STATS.burned.toLocaleString();
+    document.getElementById('ts-edits').textContent  = STATS.edits.toLocaleString();
+    document.getElementById('ts-ap').textContent     = STATS.ap.toLocaleString();
+  }catch(e){}
+
+  for(let i=0;i<5;i++){
+    const id=rand(), cell=document.getElementById('pc'+i);
+    try{
+      const px=await fetch(`${API}/normie/${id}/pixels`).then(r=>r.text());
+      const cv=document.createElement('canvas');
+      cv.width=40; cv.height=40;
+      cv.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block;';
+      drawNormie(cv,px);
+      cell.classList.remove('load');
+      cell.appendChild(cv);
+    }catch(e){cell.classList.remove('load');}
+  }
+}
+
+// ── BALANCE ──
+function renderBalance(){
+  document.getElementById('balance-fill-l').style.width = bal+'%';
+  document.getElementById('balance-fill-r').style.width = (100-bal)+'%';
+  document.getElementById('balance-cursor').style.left  = bal+'%';
+  const st=document.getElementById('balance-state');
+  const diff=Math.abs(bal-50);
+  if(diff<10){st.textContent='balanced';st.className='';}
+  else if(bal<50){st.textContent=bal<20?'erasing yourself':'burning more than building';st.className=diff>25?'danger':'';}
+  else{st.textContent=bal>80?'drowning in noise':'building more than burning';st.className=diff>25?'danger':'';}
+  applyTint(bal);
+}
+
+// ── START ──
+function startGame(){
+  bal=50; day=1; locked=false;
+  // rebuild cards avec stats à jour
+  deck=shuffle(buildCards()); di=0;
+  renderBalance();
+  showScreen('s-game');
+  setupDrag();
+  loadCard();
+}
+
+// ── LOAD CARD ──
+async function loadCard(){
+  locked=true;
+  const tpl=deck[di%deck.length];
+  const card=document.getElementById('card');
+  card.style.transition='none';
+  card.style.transform='translateX(0) rotate(0deg)';
+  card.style.opacity='1';
+  document.getElementById('swipe-stamp').className='';
+  document.getElementById('ch-l').classList.remove('hl');
+  document.getElementById('ch-r').classList.remove('hl');
+  document.getElementById('normie-wrap').classList.add('loading');
+  document.getElementById('card-txt').textContent='loading…';
+  document.getElementById('day-ct').textContent='day '+day;
+
+  const id=rand();
+  const n=await fetchNormie(id);
+  curNormie=n; curTpl=tpl;
+
+  drawNormie(document.getElementById('normie-canvas'),n.pixels);
+  applyTint(bal);
+  document.getElementById('normie-wrap').classList.remove('loading');
+  document.getElementById('card-who').textContent='normie #'+n.id+' · '+n.type.toLowerCase()+(n.canvas.customized?' · edited':'');
+  document.getElementById('card-txt').textContent=tpl.txt;
+  document.getElementById('cl-txt').textContent=tpl.l.lbl;
+  document.getElementById('cr-txt').textContent=tpl.r.lbl;
+  locked=false;
+}
+
+// ── RESOLVE ──
+function resolve(dir){
+  if(locked||!curTpl)return;
+  locked=true;
+  const ch=dir==='left'?curTpl.l:curTpl.r;
+  const card=document.getElementById('card');
+  card.style.transition='transform .28s ease,opacity .28s ease';
+  card.style.transform=`translateX(${dir==='left'?-110:110}%) rotate(${dir==='left'?-10:10}deg)`;
+  card.style.opacity='0';
+  bal=clamp(bal+(ch.fx.bal||0),0,100);
+  renderBalance();
+  setTimeout(()=>{
+    const dead=checkDeath();
+    if(dead){
+      const dc=document.getElementById('d-canvas');
+      drawNormie(dc,curNormie?.pixels||'0'.repeat(1600));
+      const dctx=dc.getContext('2d');
+      if(bal<=5){dctx.fillStyle='rgba(227,229,228,0.9)';dctx.fillRect(0,0,40,40);}
+      else if(bal>=95){dctx.fillStyle='rgba(72,73,75,0.9)';dctx.fillRect(0,0,40,40);}
+      document.getElementById('d-why').textContent=dead.why;
+      document.getElementById('d-msg').textContent=dead.msg;
+      document.getElementById('d-score').textContent=`survived ${day} day${day>1?'s':''} · normie #${curNormie?.id||'?'}`;
+      showScreen('s-death');
+    }else{
+      toast(ch.tip);
+      di++; day++;
+      if(di>=deck.length){deck=shuffle(buildCards());di=0;}
+      loadCard();
+    }
+  },300);
+}
+
+function checkDeath(){
+  if(bal<=4)return{
+    why:'burned to nothing',
+    msg:'You burned everything. Nothing remains on-chain. Your canvas is white. Normie #'+curNormie?.id+' erased.'
+  };
+  if(bal>=96)return{
+    why:'lost in the noise',
+    msg:'You built without limit. The signal drowned in pixels. Nobody can read you anymore. Normie #'+curNormie?.id+' lost in the noise.'
+  };
+  return null;
+}
+
+// ── DRAG ──
+let dragSetup=false;
+function setupDrag(){
+  if(dragSetup)return; dragSetup=true;
+  const c=document.getElementById('card');
+  function onDown(e){if(locked||e.target.closest('#card-choices'))return;drag=true;sx=e.touches?e.touches[0].clientX:e.clientX;cx=0;}
+  function onMove(e){
+    if(!drag||locked)return;
+    cx=(e.touches?e.touches[0].clientX:e.clientX)-sx;
+    c.style.transition='none';
+    c.style.transform=`translateX(${cx}px) rotate(${cx*.05}deg)`;
+    const st=document.getElementById('swipe-stamp');
+    const sw=document.getElementById('stamp-txt');
+    if(cx<-THRESH){st.className='sl';sw.textContent='BURN';document.getElementById('ch-l').classList.add('hl');document.getElementById('ch-r').classList.remove('hl');}
+    else if(cx>THRESH){st.className='sr';sw.textContent='EDIT';document.getElementById('ch-r').classList.add('hl');document.getElementById('ch-l').classList.remove('hl');}
+    else{st.className='';document.getElementById('ch-l').classList.remove('hl');document.getElementById('ch-r').classList.remove('hl');}
+  }
+  function onUp(){
+    if(!drag)return;drag=false;
+    if(Math.abs(cx)>THRESH)resolve(cx<0?'left':'right');
+    else{c.style.transition='transform .22s ease';c.style.transform='translateX(0) rotate(0deg)';document.getElementById('swipe-stamp').className='';document.getElementById('ch-l').classList.remove('hl');document.getElementById('ch-r').classList.remove('hl');}
+  }
+  c.addEventListener('mousedown',onDown);
+  c.addEventListener('touchstart',onDown,{passive:true});
+  window.addEventListener('mousemove',onMove);
+  window.addEventListener('touchmove',onMove,{passive:true});
+  window.addEventListener('mouseup',onUp);
+  window.addEventListener('touchend',onUp);
+}
+
+initTitle();
+</script>
+</body>
+</html>
